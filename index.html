@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focus — Yogesh's Timer</title>
+
+<!-- PWA / Bookmark Icon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a0533'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23c084fc' stroke-width='3' opacity='0.4'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23c084fc' stroke-width='3' stroke-dasharray='138' stroke-dashoffset='35' stroke-linecap='round' transform='rotate(-90 32 32)'/%3E%3Ctext x='32' y='37' text-anchor='middle' font-family='monospace' font-size='14' font-weight='bold' fill='%23f8f4ff'%3E25%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231a0533'/%3E%3Ccircle cx='90' cy='90' r='62' fill='none' stroke='%23c084fc' stroke-width='6' opacity='0.3'/%3E%3Ccircle cx='90' cy='90' r='62' fill='none' stroke='%23c084fc' stroke-width='6' stroke-dasharray='390' stroke-dashoffset='100' stroke-linecap='round' transform='rotate(-90 90 90)'/%3E%3Ctext x='90' y='104' text-anchor='middle' font-family='monospace' font-size='40' font-weight='bold' fill='%23f8f4ff'%3E25%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Focus">
+<meta name="theme-color" content="#1a0533">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<!-- MANIFEST inline for PWA -->
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Focus%20%E2%80%94%20Yogesh%27s%20Timer%22%2C%22short_name%22%3A%22Focus%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%231a0533%22%2C%22theme_color%22%3A%22%231a0533%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%2520 0%252064%252064%27%253E%253Crect%2520width%3D%2764%27%2520height%3D%2764%27%2520rx%3D%2714%27%2520fill%3D%27%25231a0533%27%2F%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800&family=Share+Tech+Mono&family=Nunito:wght@300;400;600;700;800&family=Oxanium:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-from: #1a0533; --bg-mid: #2d1b69; --bg-to: #0d2240;
+  --accent: #c084fc; --accent2: #f0abfc; --accent3: #818cf8;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --text-primary: #f8f4ff;
+  --text-secondary: rgba(248,244,255,0.55);
+  --text-muted: rgba(248,244,255,0.3);
+  --shadow: 0 8px 32px rgba(0,0,0,0.35);
+  --glow: 0 0 80px rgba(192,132,252,0.4);
+  --font-heading: 'Syne', sans-serif;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-clock: 'Orbitron', monospace;
+  --radius: 20px;
+  --transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── FONT PAIRS ─────────────────────── */
+.font-modern   { --font-heading:'Syne',sans-serif;       --font-display:'DM Serif Display',serif;    --font-body:'Space Grotesk',sans-serif; }
+.font-clean    { --font-heading:'Outfit',sans-serif;     --font-display:'Lora',serif;                --font-body:'Outfit',sans-serif; }
+.font-elegant  { --font-heading:'Montserrat',sans-serif; --font-display:'Cormorant Garamond',serif;  --font-body:'Montserrat',sans-serif; }
+
+/* ── CLOCK STYLES ──────────────────── */
+.clock-digital   { --font-clock:'Orbitron',monospace;      font-weight:700; letter-spacing:0.05em; }
+.clock-mono      { --font-clock:'Share Tech Mono',monospace; font-weight:400; letter-spacing:0.08em; }
+.clock-rounded   { --font-clock:'Nunito',sans-serif;        font-weight:800; letter-spacing:-0.01em; }
+.clock-thin      { --font-clock:'Oxanium',sans-serif;       font-weight:300; letter-spacing:0.1em; }
+.clock-futuristic{ --font-clock:'Orbitron',monospace;       font-weight:800; letter-spacing:0.12em; }
+
+/* ── COLOR THEMES ──────────────────── */
+.theme-purple {
+  --bg-from:#1a0533; --bg-mid:#2d1b69; --bg-to:#0d2240;
+  --accent:#c084fc; --accent2:#f0abfc; --accent3:#818cf8;
+  --glow:0 0 80px rgba(192,132,252,0.4);
+}
+.theme-blue {
+  --bg-from:#020b18; --bg-mid:#0a1628; --bg-to:#061524;
+  --accent:#38bdf8; --accent2:#7dd3fc; --accent3:#06b6d4;
+  --glow:0 0 80px rgba(56,189,248,0.4);
+}
+.theme-dark {
+  --bg-from:#080808; --bg-mid:#111111; --bg-to:#0a0a0a;
+  --accent:#d4d4d4; --accent2:#f5f5f5; --accent3:#a3a3a3;
+  --glow:0 0 60px rgba(200,200,200,0.15);
+}
+.theme-sunset {
+  --bg-from:#1a0a00; --bg-mid:#3b1205; --bg-to:#1f0a20;
+  --accent:#fb923c; --accent2:#fbbf24; --accent3:#f472b6;
+  --glow:0 0 80px rgba(251,146,60,0.4);
+}
+.theme-ocean {
+  --bg-from:#001a1a; --bg-mid:#00332e; --bg-to:#012020;
+  --accent:#2dd4bf; --accent2:#5eead4; --accent3:#06b6d4;
+  --glow:0 0 80px rgba(45,212,191,0.4);
+}
+.theme-lawn {
+  --bg-from:#050f00; --bg-mid:#0a1f00; --bg-to:#060e00;
+  --accent:#7cfc00; --accent2:#a8ff3e; --accent3:#4ade80;
+  --glow:0 0 80px rgba(124,252,0,0.35);
+}
+
+/* ── RESET ─────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--font-body);
+  background:linear-gradient(135deg,var(--bg-from) 0%,var(--bg-mid) 50%,var(--bg-to) 100%);
+  min-height:100vh;color:var(--text-primary);
+  overflow-x:hidden;transition:var(--transition);
+}
+button{cursor:pointer;border:none;background:none;font-family:inherit;}
+input{font-family:inherit;}
+::selection{background:var(--accent);color:#000;}
+
+/* noise overlay */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.6;
+}
+
+/* blobs */
+.blob{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;opacity:0.18;animation:blobFloat 12s ease-in-out infinite alternate;}
+.blob-1{width:500px;height:500px;background:var(--accent);top:-10%;left:-10%;animation-delay:0s;}
+.blob-2{width:400px;height:400px;background:var(--accent3);bottom:-10%;right:-5%;animation-delay:-4s;}
+.blob-3{width:300px;height:300px;background:var(--accent2);top:40%;left:30%;animation-delay:-8s;}
+@keyframes blobFloat{from{transform:translate(0,0) scale(1);}to{transform:translate(30px,20px) scale(1.1);}}
+
+/* ── PAGE SYSTEM ────────────────────── */
+.page{display:none;min-height:100vh;position:relative;z-index:1;}
+.page.active{display:flex;flex-direction:column;}
+
+/* ── NAVBAR ─────────────────────────── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0 2rem;
+  background:rgba(0,0,0,0.2);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--glass-border);
+  height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:var(--transition);
+}
+.nav-logo{font-family:var(--font-display);font-size:1.4rem;color:var(--accent);display:flex;align-items:center;gap:8px;font-style:italic;}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.8);}}
+
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-btn{
+  padding:8px 18px;border-radius:100px;
+  font-family:var(--font-heading);font-size:0.8rem;font-weight:600;
+  letter-spacing:0.05em;text-transform:uppercase;
+  color:var(--text-secondary);transition:var(--transition);
+}
+.nav-btn:hover{color:var(--text-primary);background:var(--glass);}
+.nav-btn.active{color:var(--accent);background:rgba(192,132,252,0.12);}
+
+.nav-right{display:flex;align-items:center;gap:12px;}
+.user-badge{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--glass-border);border-radius:100px;padding:6px 14px 6px 8px;font-family:var(--font-heading);font-size:0.8rem;font-weight:600;color:var(--text-primary);}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#000;}
+
+.xp-compact{display:flex;align-items:center;gap:8px;background:var(--glass);border:1px solid var(--glass-border);border-radius:100px;padding:6px 14px;cursor:default;}
+.xp-label{font-family:var(--font-heading);font-size:0.72rem;font-weight:700;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;white-space:nowrap;}
+.xp-track{width:80px;height:4px;border-radius:10px;background:rgba(255,255,255,0.1);overflow:hidden;}
+.xp-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s ease;box-shadow:0 0 8px var(--accent);}
+
+/* ══════════════════════════════════════
+   TIMER PAGE — 2-COLUMN CONTROL PANEL
+   ══════════════════════════════════════ */
+
+/* Override page defaults for timer */
+.timer-page {
+  padding-top:64px;
+  height:100vh;
+  overflow:hidden;
+  flex-direction:row !important;
+  align-items:stretch;
+}
+
+/* ── SIDEBAR (LEFT) ─────────────────── */
+.sidebar {
+  width:260px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  padding:20px 16px 80px;
+  border-right:1px solid var(--glass-border);
+  background:rgba(0,0,0,0.15);
+  backdrop-filter:blur(30px);
+  overflow:hidden;
+}
+
+.sidebar-section {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:20px;
+}
+.sidebar-section:last-child { margin-bottom:0; }
+
+.sidebar-label {
+  font-family:var(--font-heading);
+  font-size:0.6rem;
+  font-weight:700;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  padding:0 4px;
+  margin-bottom:2px;
+}
+
+/* Mode buttons */
+.mode-btn {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 14px;
+  border-radius:12px;
+  background:transparent;
+  border:1px solid transparent;
+  color:var(--text-secondary);
+  font-family:var(--font-heading);
+  font-size:0.82rem;
+  font-weight:600;
+  letter-spacing:0.03em;
+  text-align:left;
+  transition:var(--transition);
+  cursor:pointer;
+  position:relative;
+}
+.mode-btn:hover {
+  background:var(--glass);
+  color:var(--text-primary);
+  border-color:var(--glass-border);
+}
+.mode-btn.active {
+  background:rgba(192,132,252,0.12);
+  border-color:rgba(192,132,252,0.3);
+  color:var(--accent);
+}
+.mode-btn-icon {
+  width:32px;height:32px;
+  border-radius:8px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;
+  flex-shrink:0;
+  transition:var(--transition);
+}
+.mode-btn.active .mode-btn-icon {
+  background:rgba(192,132,252,0.2);
+  border-color:rgba(192,132,252,0.4);
+}
+.mode-btn-text { display:flex;flex-direction:column;gap:1px; }
+.mode-btn-name { font-size:0.82rem; font-weight:600; line-height:1; }
+.mode-btn-desc { font-size:0.62rem; color:var(--text-muted); font-weight:400; font-family:var(--font-body); }
+.mode-btn.active .mode-btn-desc { color:rgba(192,132,252,0.7); }
+
+/* Session input in sidebar */
+.sb-input {
+  width:100%;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:10px;
+  padding:10px 14px;
+  color:var(--text-primary);
+  font-family:var(--font-body);
+  font-size:0.82rem;
+  outline:none;
+  transition:var(--transition);
+}
+.sb-input::placeholder { color:var(--text-muted); }
+.sb-input:focus {
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(192,132,252,0.12);
+  background:rgba(255,255,255,0.08);
+}
+
+/* Quick preset chips */
+.preset-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chip {
+  padding:6px 12px;
+  border-radius:8px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-secondary);
+  font-family:var(--font-heading);
+  font-size:0.72rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.chip:hover {
+  background:rgba(192,132,252,0.12);
+  border-color:rgba(192,132,252,0.3);
+  color:var(--accent);
+}
+
+/* Sidebar control buttons */
+.sb-controls { display:flex; gap:8px; }
+
+.sb-btn-play {
+  flex:1;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 16px;
+  border-radius:12px;
+  background:var(--accent);
+  color:#000;
+  font-family:var(--font-heading);
+  font-size:0.82rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  cursor:pointer;
+  border:none;
+  transition:var(--transition);
+  box-shadow:0 4px 20px rgba(192,132,252,0.35);
+}
+.sb-btn-play:hover {
+  transform:translateY(-1px);
+  box-shadow:0 6px 28px rgba(192,132,252,0.5);
+}
+.sb-btn-play:active { transform:scale(0.97); }
+.sb-btn-play.running {
+  background:transparent;
+  border:1.5px solid var(--accent);
+  color:var(--accent);
+  box-shadow:none;
+}
+
+.sb-btn-icon {
+  width:40px;height:40px;
+  border-radius:10px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  color:var(--text-secondary);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:var(--transition);
+  flex-shrink:0;
+}
+.sb-btn-icon:hover {
+  color:var(--text-primary);
+  border-color:rgba(192,132,252,0.4);
+  background:rgba(192,132,252,0.08);
+}
+.sb-btn-icon:active { transform:scale(0.93); }
+.sb-btn-icon svg { width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+.sb-btn-icon.stop svg { fill:currentColor;stroke:none; }
+
+/* Sidebar bottom: kbd hint */
+.sb-kbd {
+  margin-top:auto;
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--font-body);font-size:0.62rem;color:var(--text-muted);
+  flex-wrap:wrap;
+}
+.sb-kbd kbd {
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:4px;padding:2px 6px;
+  font-family:var(--font-body);font-size:0.6rem;color:var(--text-secondary);
+}
+
+/* ── MAIN AREA (RIGHT) ──────────────── */
+.timer-main {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1rem;
+  padding:20px 40px 80px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Mode title */
+.timer-mode-title {
+  font-family:var(--font-heading);
+  font-size:0.7rem;
+  font-weight:700;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  transition:var(--transition);
+}
+
+/* Session running label */
+.session-label {
+  font-family:var(--font-display);
+  font-size:1rem;
+  color:var(--text-secondary);
+  font-style:italic;
+  min-height:24px;
+  transition:var(--transition);
+  text-align:center;
+}
+
+/* CLOCK — no ring, pure display */
+.clock-wrap {
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  /* no fixed dimensions — let content breathe */
+}
+/* Hide the old border ring */
+.clock-ring { display:none; }
+.clock-ring-progress { display:none; }
+
+.clock-display {
+  font-family:var(--font-clock);
+  font-size:clamp(5rem,11vw,9.5rem);
+  font-weight:700;
+  letter-spacing:0.04em;
+  color:var(--text-primary);
+  text-shadow:var(--glow), 0 2px 40px rgba(255,255,255,0.06);
+  line-height:1;
+  z-index:2;
+  transition:font-family 0.4s ease, font-weight 0.4s ease, text-shadow 0.3s ease;
+  user-select:none;
+  /* subtle scale pulse when ticking */
+}
+.clock-display.ticking {
+  animation:tickGlow 1s ease-in-out infinite alternate;
+}
+@keyframes tickGlow {
+  from { text-shadow:0 0 40px rgba(192,132,252,0.3), 0 2px 20px rgba(255,255,255,0.04); }
+  to   { text-shadow:0 0 120px rgba(192,132,252,0.7), 0 0 60px rgba(192,132,252,0.3), 0 2px 40px rgba(255,255,255,0.08); }
+}
+
+/* thin accent line under clock when ticking */
+.clock-underline {
+  height:2px;
+  width:0;
+  border-radius:2px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  transition:width 0.6s ease;
+  margin-top:4px;
+}
+.clock-display.ticking ~ .clock-underline { width:280px; }
+
+/* Status text */
+.timer-status {
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:0.95rem;
+  color:var(--text-muted);
+  min-height:22px;
+  transition:var(--transition);
+  text-align:center;
+}
+.timer-status.active { color:var(--accent2); }
+
+/* Kbd hint (right side — hidden since sidebar has one) */
+.kbd-hint { display:none; }
+
+/* focus time input — keep it functional but hidden by default */
+.focus-time-input-wrap{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:3;}
+.focus-time-inputs{display:flex;align-items:center;gap:4px;}
+.time-spin{width:100px;background:transparent;border:none;outline:none;color:var(--text-primary);font-family:var(--font-clock);font-size:5rem;text-align:center;cursor:pointer;border-bottom:2px solid var(--glass-border);transition:var(--transition);}
+.time-spin:focus{border-bottom-color:var(--accent);}
+.time-sep{color:var(--text-secondary);font-size:4rem;margin:0 2px;}
+
+/* OLD center stack — keep hidden (session-input-wrap, mode-pills, old controls) */
+.session-input-wrap { display:none; }
+.mode-pills { display:none; }
+.controls { display:none; }
+
+/* ── RESPONSIVE ─────────────────────── */
+@media(max-width:700px) {
+  .timer-page { flex-direction:column !important; }
+  .sidebar {
+    width:100%;
+    flex-direction:row;
+    flex-wrap:wrap;
+    padding:10px 12px 10px;
+    border-right:none;
+    border-bottom:1px solid var(--glass-border);
+    gap:8px;
+    height:auto;
+  }
+  .sidebar-section { margin-bottom:0; flex-direction:row; align-items:center; gap:6px; }
+  .sidebar-label { display:none; }
+  .timer-main { padding:16px 16px 80px; }
+  .clock-display { font-size:clamp(3.5rem,16vw,6rem); }
+}
+
+/* ── ALARM DISMISS BANNER ─────────────── */
+.alarm-banner{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-30px);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;padding:14px 32px;border-radius:100px;
+  font-family:var(--font-heading);font-size:0.9rem;font-weight:700;
+  letter-spacing:0.05em;z-index:600;opacity:0;pointer-events:none;
+  transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+  white-space:nowrap;box-shadow:0 8px 32px rgba(192,132,252,0.5);
+  display:flex;align-items:center;gap:12px;
+}
+.alarm-banner.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+.alarm-stop-btn{
+  background:rgba(0,0,0,0.2);border-radius:100px;
+  padding:4px 14px;font-size:0.8rem;font-weight:700;
+  cursor:pointer;border:none;color:#000;transition:background 0.2s;
+}
+.alarm-stop-btn:hover{background:rgba(0,0,0,0.35);}
+
+/* ── BOTTOM TOOLBAR ─────────────────── */
+.bottom-bar{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,0.4);backdrop-filter:blur(30px);
+  border:1px solid var(--glass-border);border-radius:100px;
+  padding:8px 12px;z-index:50;
+}
+.tool-btn{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;color:var(--text-secondary);transition:var(--transition);position:relative;
+}
+.tool-btn:hover{color:var(--text-primary);background:var(--glass);}
+.tool-btn.active{color:var(--accent);background:rgba(192,132,252,0.12);}
+.tool-divider{width:1px;height:24px;background:var(--glass-border);margin:0 4px;}
+.tool-btn[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:rgba(0,0,0,0.85);color:#fff;font-family:var(--font-body);font-size:0.72rem;
+  padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;
+}
+
+/* ── THEME PANEL ─────────────────────── */
+.panel-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.55);backdrop-filter:blur(10px);
+  display:none;align-items:center;justify-content:center;
+  animation:fadeIn 0.2s ease;
+}
+.panel-overlay.open{display:flex;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.panel{
+  background:linear-gradient(135deg,rgba(26,5,51,0.97),rgba(13,34,64,0.97));
+  border:1px solid var(--glass-border);border-radius:var(--radius);
+  padding:2rem;width:460px;max-width:92vw;
+  backdrop-filter:blur(40px);box-shadow:var(--shadow);
+  animation:slideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  max-height:88vh;overflow-y:auto;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.panel-title{font-family:var(--font-heading);font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-primary);}
+.panel-close{width:32px;height:32px;border-radius:50%;background:var(--glass);border:1px solid var(--glass-border);color:var(--text-secondary);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.panel-close:hover{color:var(--text-primary);}
+
+.panel-section{margin-bottom:1.6rem;}
+.panel-section-title{font-family:var(--font-body);font-size:0.72rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.8rem;}
+
+/* theme swatches */
+.theme-swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.swatch{height:60px;border-radius:12px;display:flex;align-items:flex-end;padding:8px 10px;font-family:var(--font-body);font-size:0.75rem;font-weight:500;color:rgba(255,255,255,0.8);cursor:pointer;border:2px solid transparent;transition:var(--transition);position:relative;overflow:hidden;}
+.swatch:hover{transform:scale(1.03);}
+.swatch.selected{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,0.2);}
+.swatch-purple{background:linear-gradient(135deg,#1a0533,#2d1b69,#0d2240);}
+.swatch-blue{background:linear-gradient(135deg,#020b18,#0a1628,#0c2a4a);}
+.swatch-dark{background:linear-gradient(135deg,#080808,#111,#141414);}
+.swatch-sunset{background:linear-gradient(135deg,#1a0a00,#3b1205,#1f0a20);}
+.swatch-ocean{background:linear-gradient(135deg,#001a1a,#00332e,#012020);}
+.swatch-lawn{background:linear-gradient(135deg,#050f00,#0a1f00,#040c00);}
+
+/* font pairs */
+.font-options{display:flex;flex-direction:column;gap:8px;}
+.font-option{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;gap:2px;}
+.font-option:hover{border-color:var(--accent);}
+.font-option.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
+.font-option-heading{font-size:1rem;font-weight:700;color:var(--text-primary);}
+.font-option-sub{font-size:0.78rem;color:var(--text-secondary);}
+
+/* clock style options */
+.clock-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.clock-option{
+  background:var(--glass);border:1px solid var(--glass-border);
+  border-radius:12px;padding:14px 12px;
+  cursor:pointer;transition:var(--transition);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.clock-option:hover{border-color:var(--accent);}
+.clock-option.selected{border-color:var(--accent);background:rgba(192,132,252,0.1);}
+.clock-option-preview{font-size:1.3rem;font-weight:bold;color:var(--text-primary);}
+.clock-option-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
+
+/* sound toggles */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-family:var(--font-body);font-size:0.85rem;color:var(--text-secondary);}
+.toggle-switch{width:42px;height:24px;border-radius:100px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;position:relative;transition:var(--transition);}
+.toggle-switch.on{background:var(--accent);border-color:var(--accent);}
+.toggle-switch::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:var(--transition);}
+.toggle-switch.on::after{left:20px;}
+
+/* ══════════════════════════════════════
+   DASHBOARD — NO-SCROLL COMMAND CENTER
+   ══════════════════════════════════════ */
+.dashboard-page{
+  padding-top:64px;
+  height:100vh;
+  overflow:hidden;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+}
+.dash-grid{
+  display:grid;
+  height:calc(100vh - 64px);
+  grid-template-rows: 1fr auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-areas:
+    "hero  hero  hero"
+    "mid-l mid-m mid-r"
+    "bot-l bot-m bot-r";
+  gap:10px;
+  padding:10px 14px 76px;
+  box-sizing:border-box;
+}
+
+/* shared card base */
+.dc{
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  backdrop-filter:blur(20px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  overflow:hidden;
+  position:relative;
+  transition:var(--transition);
+}
+.dc:hover{border-color:rgba(255,255,255,0.2);}
+.dc-label{
+  font-family:var(--font-heading);
+  font-size:0.62rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:4px;
+}
+
+/* ── HERO ─────────────────────────── */
+.dc-hero{
+  grid-area:hero;
+  background:linear-gradient(135deg,rgba(192,132,252,0.1),rgba(129,140,248,0.06));
+  border-color:rgba(192,132,252,0.2);
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-around;
+  padding:0 2.5rem;
+  gap:2rem;
+}
+.dc-hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(192,132,252,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-main{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hero-time-val{
+  font-family:var(--font-display);
+  font-size:clamp(3.2rem,7vw,5.5rem);
+  font-weight:400;
+  color:var(--text-primary);
+  line-height:1;
+  text-shadow:var(--glow);
+  letter-spacing:-0.02em;
+  animation:heroGlow 3s ease-in-out infinite alternate;
+}
+@keyframes heroGlow{
+  from{text-shadow:0 0 40px rgba(192,132,252,0.25);}
+  to  {text-shadow:0 0 90px rgba(192,132,252,0.6),0 0 30px rgba(192,132,252,0.3);}
+}
+.hero-time-label{
+  font-family:var(--font-heading);font-size:0.7rem;font-weight:700;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--text-muted);margin-top:2px;
+}
+.hero-divider{width:1px;height:60%;background:var(--glass-border);flex-shrink:0;}
+.hero-meta{display:flex;flex-direction:column;gap:14px;}
+.hero-stat{display:flex;flex-direction:column;gap:1px;}
+.hero-stat-val{
+  font-family:var(--font-display);font-size:1.7rem;
+  color:var(--text-primary);line-height:1;
+}
+.hero-stat-lbl{font-family:var(--font-body);font-size:0.65rem;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;}
+.hero-cta{
+  display:flex;align-items:center;gap:8px;
+  background:var(--accent);color:#000;
+  border:none;border-radius:100px;
+  padding:10px 22px;cursor:pointer;
+  font-family:var(--font-heading);font-size:0.78rem;font-weight:700;
+  letter-spacing:0.06em;text-transform:uppercase;
+  box-shadow:0 6px 24px rgba(192,132,252,0.4);
+  transition:var(--transition);
+}
+.hero-cta:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(192,132,252,0.55);}
+
+/* ── XP CARD ─────────────────────────── */
+.dc-xp{
+  grid-area:mid-l;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(129,140,248,0.1),rgba(192,132,252,0.06));
+  border-color:rgba(129,140,248,0.25);
+}
+.xp-level-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(129,140,248,0.15);border:1px solid rgba(129,140,248,0.3);
+  border-radius:100px;padding:3px 10px;
+  font-family:var(--font-heading);font-size:0.7rem;font-weight:700;
+  color:var(--accent3);letter-spacing:0.06em;text-transform:uppercase;
+  margin-bottom:8px;width:fit-content;
+}
+.xp-level-num{
+  font-family:var(--font-display);font-size:1.9rem;
+  color:var(--text-primary);line-height:1;
+}
+.xp-bar-wrap{
+  width:100%;height:5px;background:rgba(255,255,255,0.07);
+  border-radius:100px;overflow:hidden;margin-top:8px;
+}
+.xp-bar-fill{
+  height:100%;border-radius:100px;
+  background:linear-gradient(90deg,var(--accent3),var(--accent));
+  transition:width 1s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 0 8px var(--accent3);
+}
+.xp-counts{
+  display:flex;justify-content:space-between;
+  font-family:var(--font-body);font-size:0.62rem;
+  color:var(--text-muted);margin-top:5px;
+}
+
+/* ── BEST SESSION CARD ─────────────── */
+.dc-best{
+  grid-area:mid-m;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(192,132,252,0.12),rgba(240,171,252,0.06));
+  border-color:rgba(192,132,252,0.25);
+}
+.best-trophy-icon{font-size:1.5rem;margin-bottom:4px;}
+.best-val{
+  font-family:var(--font-display);font-size:1.9rem;
+  color:var(--text-primary);line-height:1;
+  text-shadow:0 0 30px rgba(192,132,252,0.5);
+}
+.best-date{font-family:var(--font-body);font-size:0.65rem;color:var(--text-muted);margin-top:4px;}
+
+/* ── STREAK CARD ────────────────────── */
+.dc-streak{
+  grid-area:mid-r;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(251,146,60,0.12),rgba(251,191,36,0.06));
+  border-color:rgba(251,146,60,0.28);
+}
+.streak-fire{font-size:1.5rem;margin-bottom:4px;}
+.streak-num{
+  font-family:var(--font-display);font-size:1.9rem;
+  color:var(--text-primary);line-height:1;
+}
+.streak-sub{font-family:var(--font-body);font-size:0.65rem;color:var(--text-muted);margin-top:4px;}
+
+/* ── FOCUS vs BREAK ─────────────────── */
+.dc-ratio{
+  grid-area:bot-l;
+  padding:12px 16px;
+  gap:8px;
+}
+.ratio-bar-row{display:flex;width:100%;height:6px;border-radius:100px;overflow:hidden;gap:2px;}
+.ratio-seg{height:100%;border-radius:100px;transition:width 1s cubic-bezier(0.4,0,0.2,1);}
+.ratio-focus-seg{background:linear-gradient(90deg,var(--accent),var(--accent3));}
+.ratio-break-seg{background:rgba(52,211,153,0.6);}
+.ratio-legend{display:flex;justify-content:space-between;font-family:var(--font-body);font-size:0.65rem;color:var(--text-secondary);}
+.ratio-insight{
+  font-family:var(--font-body);font-size:0.72rem;
+  color:var(--text-muted);font-style:italic;
+  margin-top:2px;
+}
+
+/* ── 7-DAY HEATMAP ───────────────────── */
+.dc-heatmap{
+  grid-area:bot-m;
+  padding:12px 16px;
+  gap:8px;
+}
+.heatmap-row{
+  display:flex;gap:5px;
+  align-items:center;
+  justify-content:space-between;
+}
+.heatmap-cell{
+  flex:1;aspect-ratio:1;border-radius:5px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.04);
+  transition:background 0.6s ease;
+  position:relative;
+}
+.heatmap-cell.d1{background:rgba(192,132,252,0.2);}
+.heatmap-cell.d2{background:rgba(192,132,252,0.4);}
+.heatmap-cell.d3{background:rgba(192,132,252,0.6);}
+.heatmap-cell.d4{background:rgba(192,132,252,0.85);box-shadow:0 0 10px rgba(192,132,252,0.4);}
+.heatmap-days{display:flex;justify-content:space-between;gap:5px;}
+.heatmap-day-lbl{flex:1;text-align:center;font-family:var(--font-body);font-size:0.55rem;color:var(--text-muted);text-transform:uppercase;}
+
+/* ── IMPROVEMENT ─────────────────────── */
+.dc-improve{
+  grid-area:bot-r;
+  padding:12px 16px;
+  gap:4px;
+}
+.improve-delta{
+  font-family:var(--font-display);font-size:1.6rem;
+  line-height:1;
+}
+.improve-delta.pos{color:#34d399;text-shadow:0 0 20px rgba(52,211,153,0.4);}
+.improve-delta.neg{color:#f87171;text-shadow:0 0 20px rgba(248,113,113,0.3);}
+.improve-delta.neutral{color:var(--text-muted);}
+.improve-desc{font-family:var(--font-body);font-size:0.65rem;color:var(--text-muted);margin-top:2px;}
+.improve-compare{
+  display:flex;gap:10px;margin-top:6px;
+}
+.improve-day{display:flex;flex-direction:column;gap:2px;}
+.improve-day-bar{height:3px;border-radius:2px;min-width:4px;transition:width 0.8s ease;}
+.improve-day-lbl{font-size:0.58rem;font-family:var(--font-body);color:var(--text-muted);}
+
+/* ── RESPONSIVE ─────────────────────── */
+@media(max-width:700px){
+  .dash-grid{
+    grid-template-areas:
+      "hero  hero  hero"
+      "mid-l mid-m mid-r"
+      "bot-l bot-m bot-r";
+    padding:8px 8px 76px;
+    gap:7px;
+  }
+  .hero-time-val{font-size:2.6rem;}
+  .hero-cta{display:none;}
+  .hero-divider{display:none;}
+  .hero-main{align-items:flex-start;}
+}
+@media(max-width:480px){
+  .dash-grid{
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:
+      "hero  hero"
+      "mid-l mid-m"
+      "mid-r bot-l"
+      "bot-m bot-r";
+    height:auto;overflow:auto;
+  }
+  .dashboard-page{overflow-y:auto;height:auto;}
+}
+
+/* ── CONFETTI ─────────────────────────── */
+#confetti-canvas{position:fixed;inset:0;z-index:9999;pointer-events:none;}
+
+/* ── CELEBRATION ─────────────────────── */
+.celebration-popup{
+  position:fixed;top:90px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;
+  padding:14px 28px;border-radius:100px;
+  font-family:var(--font-heading);font-size:0.9rem;font-weight:700;letter-spacing:0.05em;
+  z-index:500;opacity:0;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
+  white-space:nowrap;box-shadow:0 8px 32px rgba(192,132,252,0.5);pointer-events:none;
+}
+.celebration-popup.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── KEYBOARD HINT ─────────────────────── */
+.kbd-hint{display:flex;align-items:center;gap:6px;font-family:var(--font-body);font-size:0.72rem;color:var(--text-muted);}
+kbd{background:var(--glass);border:1px solid var(--glass-border);border-radius:4px;padding:2px 7px;font-family:var(--font-body);font-size:0.68rem;color:var(--text-secondary);}
+
+/* ── SCROLLBAR ──────────────────────── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--glass-border);border-radius:4px;}
+
+/* ── RESPONSIVE ─────────────────────── */
+@media(max-width:480px){
+  .clock-display{font-size:4.2rem;}
+  .clock-wrap{width:300px;height:300px;}
+  .nav{padding:0 1rem;}
+  .user-badge span{display:none;}
+  .xp-track{width:50px;}
+}
+</style>
+</head>
+<body class="theme-purple font-modern clock-digital">
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<canvas id="confetti-canvas"></canvas>
+<div class="celebration-popup" id="celebration-popup">🎉 Level Up!</div>
+
+<!-- ALARM BANNER -->
+<div class="alarm-banner" id="alarm-banner">
+  <span>⏰ Session Complete!</span>
+  <button class="alarm-stop-btn" onclick="stopAlarm()">Dismiss</button>
+</div>
+
+<!-- SVG DEFS FOR GRADIENTS -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="ringGrad1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="ringGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- NAVBAR -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="dot"></div>
+    focus.
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" id="nav-timer" onclick="showPage('timer')">Timer</button>
+    <button class="nav-btn" id="nav-dash" onclick="showPage('dashboard')">Dashboard</button>
+  </div>
+  <div class="nav-right">
+    <div class="xp-compact" title="XP Progress">
+      <span class="xp-label" id="nav-level">Lv 1</span>
+      <div class="xp-track"><div class="xp-fill" id="nav-xp-fill" style="width:0%"></div></div>
+    </div>
+    <div class="user-badge">
+      <div class="user-avatar">Y</div>
+      <span>Yogesh</span>
+    </div>
+  </div>
+</nav>
+
+<!-- TIMER PAGE — 2-COLUMN CONTROL PANEL -->
+<section class="page timer-page active" id="page-timer">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Mode Selection -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Mode</div>
+      <button class="mode-btn active" id="pill-focus" onclick="setMode('focus')">
+        <div class="mode-btn-icon">🎯</div>
+        <div class="mode-btn-text">
+          <span class="mode-btn-name">Focus</span>
+          <span class="mode-btn-desc">Countdown timer</span>
+        </div>
+      </button>
+      <button class="mode-btn" id="pill-stopwatch" onclick="setMode('stopwatch')">
+        <div class="mode-btn-icon">⏱</div>
+        <div class="mode-btn-text">
+          <span class="mode-btn-name">Stopwatch</span>
+          <span class="mode-btn-desc">Count up freely</span>
+        </div>
+      </button>
+      <button class="mode-btn" id="pill-break" onclick="setMode('break')">
+        <div class="mode-btn-icon">☕</div>
+        <div class="mode-btn-text">
+          <span class="mode-btn-name">Break</span>
+          <span class="mode-btn-desc">Recharge time</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Session Name -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Session</div>
+      <input class="sb-input" type="text" id="session-input"
+        placeholder="What are you working on?" maxlength="60">
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Set</div>
+      <div class="preset-chips">
+        <button class="chip" onclick="setQuick(25)">25 min</button>
+        <button class="chip" onclick="setQuick(50)">50 min</button>
+        <button class="chip" onclick="setQuick(90)">90 min</button>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Controls</div>
+      <div class="sb-controls">
+        <button class="sb-btn-play" id="btn-playpause" onclick="toggleTimer()">
+          <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+          <svg id="icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="5" y="3" width="4" height="18" rx="1"/><rect x="15" y="3" width="4" height="18" rx="1"/></svg>
+          <span id="play-label">Start</span>
+        </button>
+        <button class="sb-btn-icon" id="btn-reset" onclick="resetTimer()" title="Reset">
+          <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
+        </button>
+        <button class="sb-btn-icon stop" id="btn-stop" onclick="stopSession()" title="Save & Stop">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Keyboard hint -->
+    <div class="sb-kbd">
+      <kbd>Space</kbd> play/pause &nbsp; <kbd>R</kbd> reset
+    </div>
+
+  </aside>
+
+  <!-- RIGHT MAIN AREA -->
+  <main class="timer-main">
+    <div class="timer-mode-title" id="timer-mode-title">FOCUS TIMER</div>
+    <div class="session-label" id="session-label-display">What will you focus on?</div>
+
+    <div class="clock-wrap">
+      <!-- ring hidden by CSS, kept for JS compatibility -->
+      <div class="clock-ring"></div>
+      <svg class="clock-ring-progress" viewBox="0 0 420 420" style="position:absolute;inset:0;display:none">
+        <circle cx="210" cy="210" r="204" id="progress-ring"/>
+      </svg>
+      <div class="clock-display" id="clock-display">25:00</div>
+    </div>
+    <div class="clock-underline" id="clock-underline"></div>
+
+    <div class="timer-status" id="timer-status">Set a focus duration and start</div>
+
+    <!-- kept in DOM for JS — hidden by CSS -->
+    <div class="session-input-wrap"><input id="session-input-hidden" type="text" style="display:none"></div>
+    <div class="mode-pills">
+      <button class="mode-pill" id="mode-pill-compat-focus"></button>
+      <button class="mode-pill" id="mode-pill-compat-stopwatch"></button>
+      <button class="mode-pill" id="mode-pill-compat-break"></button>
+    </div>
+    <div class="controls">
+      <button id="btn-reset-hidden" style="display:none"></button>
+      <button id="btn-playpause-hidden" style="display:none"></button>
+      <button id="btn-stop-hidden" style="display:none"></button>
+    </div>
+    <div class="kbd-hint"></div>
+  </main>
+
+</section>
+
+<!-- DASHBOARD PAGE — NO-SCROLL COMMAND CENTER -->
+<section class="page dashboard-page" id="page-dashboard">
+  <div class="dash-grid">
+
+    <!-- HERO: Today Command Center -->
+    <div class="dc dc-hero">
+      <div class="hero-main">
+        <div class="dc-label">Today's Focus</div>
+        <div class="hero-time-val" id="dash-today-val">0m</div>
+        <div class="hero-time-label" id="dash-goal-left">—</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-meta">
+        <div class="hero-stat">
+          <div class="dc-label">Sessions</div>
+          <div class="hero-stat-val" id="dash-sessions-val">0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="dc-label">Total All-Time</div>
+          <div class="hero-stat-val" id="dash-total-val">0m</div>
+        </div>
+      </div>
+      <button class="hero-cta" onclick="showPage('timer')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>
+        Start Session
+      </button>
+    </div>
+
+    <!-- XP + Level -->
+    <div class="dc dc-xp">
+      <div class="dc-label">Progress</div>
+      <div class="xp-level-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        <span id="dash-level-badge">Level 1</span>
+      </div>
+      <div class="xp-level-num" id="dash-level-num">1</div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-fill" id="dash-xp-bar" style="width:0%"></div>
+      </div>
+      <div class="xp-counts">
+        <span id="dash-xp-cur">0 XP</span>
+        <span id="dash-xp-next">60 XP</span>
+      </div>
+    </div>
+
+    <!-- Best Session -->
+    <div class="dc dc-best">
+      <div class="dc-label">Best Session</div>
+      <div class="best-trophy-icon">🏆</div>
+      <div class="best-val" id="dash-best-val">—</div>
+      <div class="best-date" id="dash-best-date">No sessions yet</div>
+    </div>
+
+    <!-- Streak -->
+    <div class="dc dc-streak">
+      <div class="dc-label">Streak</div>
+      <div class="streak-fire">🔥</div>
+      <div class="streak-num" id="dash-streak-num">0</div>
+      <div class="streak-sub" id="dash-streak-sub">days in a row</div>
+    </div>
+
+    <!-- Focus vs Break ratio -->
+    <div class="dc dc-ratio">
+      <div class="dc-label">Focus vs Break</div>
+      <div class="ratio-bar-row">
+        <div class="ratio-seg ratio-focus-seg" id="ratio-focus-bar" style="width:50%"></div>
+        <div class="ratio-seg ratio-break-seg" id="ratio-break-bar" style="width:50%"></div>
+      </div>
+      <div class="ratio-legend">
+        <span id="ratio-focus-lbl">Focus —%</span>
+        <span id="ratio-break-lbl">Break —%</span>
+      </div>
+      <div class="ratio-insight" id="ratio-insight">No data yet</div>
+    </div>
+
+    <!-- 7-Day Heatmap -->
+    <div class="dc dc-heatmap">
+      <div class="dc-label">Last 7 Days</div>
+      <div class="heatmap-row" id="heatmap-cells"></div>
+      <div class="heatmap-days" id="heatmap-labels"></div>
+    </div>
+
+    <!-- Improvement vs Yesterday -->
+    <div class="dc dc-improve">
+      <div class="dc-label">vs Yesterday</div>
+      <div class="improve-delta" id="improve-delta">—</div>
+      <div class="improve-desc" id="improve-desc">No comparison yet</div>
+      <div class="improve-compare" id="improve-bars"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- BOTTOM TOOLBAR -->
+<div class="bottom-bar">
+  <button class="tool-btn" data-tip="Theme &amp; Fonts" onclick="openPanel('theme')">🎨</button>
+  <button class="tool-btn" id="sound-btn" data-tip="Toggle Sound" onclick="toggleSound()">🔊</button>
+  <div class="tool-divider"></div>
+  <button class="tool-btn" data-tip="Focus mode" onclick="setMode('focus')">🎯</button>
+  <button class="tool-btn" data-tip="Stopwatch" onclick="setMode('stopwatch')">⏱</button>
+  <button class="tool-btn" data-tip="Break" onclick="setMode('break')">☕</button>
+  <div class="tool-divider"></div>
+  <button class="tool-btn" data-tip="Set 25 min" onclick="setQuick(25)">25</button>
+  <button class="tool-btn" data-tip="Set 50 min" onclick="setQuick(50)">50</button>
+  <button class="tool-btn" data-tip="Set 90 min" onclick="setQuick(90)">90</button>
+</div>
+
+<!-- THEME / CUSTOMIZE PANEL -->
+<div class="panel-overlay" id="panel-theme">
+  <div class="panel" onclick="event.stopPropagation()">
+    <div class="panel-header">
+      <div class="panel-title">Customize</div>
+      <button class="panel-close" onclick="closePanel('theme')">✕</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Background Theme</div>
+      <div class="theme-swatches">
+        <div class="swatch swatch-purple" data-theme="purple" onclick="applyTheme('purple')">Purple Night</div>
+        <div class="swatch swatch-blue" data-theme="blue" onclick="applyTheme('blue')">Blue Neon</div>
+        <div class="swatch swatch-dark" data-theme="dark" onclick="applyTheme('dark')">Dark Minimal</div>
+        <div class="swatch swatch-sunset" data-theme="sunset" onclick="applyTheme('sunset')">Sunset</div>
+        <div class="swatch swatch-ocean" data-theme="ocean" onclick="applyTheme('ocean')">Ocean Green</div>
+        <div class="swatch swatch-lawn" data-theme="lawn" onclick="applyTheme('lawn')">Lawn Neon</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Font Theme</div>
+      <div class="font-options">
+        <div class="font-option" data-font="modern" onclick="applyFont('modern')">
+          <div class="font-option-heading" style="font-family:'Syne',sans-serif">Modern</div>
+          <div class="font-option-sub" style="font-family:'DM Serif Display',serif;font-style:italic">Syne + DM Serif Display — Bold & Contemporary</div>
+        </div>
+        <div class="font-option" data-font="clean" onclick="applyFont('clean')">
+          <div class="font-option-heading" style="font-family:'Outfit',sans-serif">Clean</div>
+          <div class="font-option-sub" style="font-family:'Lora',serif;font-style:italic">Outfit + Lora — Fresh & Readable</div>
+        </div>
+        <div class="font-option" data-font="elegant" onclick="applyFont('elegant')">
+          <div class="font-option-heading" style="font-family:'Montserrat',sans-serif">Elegant</div>
+          <div class="font-option-sub" style="font-family:'Cormorant Garamond',serif;font-style:italic">Montserrat + Cormorant — Refined & Luxurious</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Clock Style</div>
+      <div class="clock-options">
+        <div class="clock-option" data-clock="digital" onclick="applyClockStyle('digital')">
+          <div class="clock-option-preview" style="font-family:'Orbitron',monospace;font-weight:700">25:00</div>
+          <div class="clock-option-label">Digital</div>
+        </div>
+        <div class="clock-option" data-clock="mono" onclick="applyClockStyle('mono')">
+          <div class="clock-option-preview" style="font-family:'Share Tech Mono',monospace">25:00</div>
+          <div class="clock-option-label">Mono</div>
+        </div>
+        <div class="clock-option" data-clock="rounded" onclick="applyClockStyle('rounded')">
+          <div class="clock-option-preview" style="font-family:'Nunito',sans-serif;font-weight:800">25:00</div>
+          <div class="clock-option-label">Rounded</div>
+        </div>
+        <div class="clock-option" data-clock="thin" onclick="applyClockStyle('thin')">
+          <div class="clock-option-preview" style="font-family:'Oxanium',sans-serif;font-weight:300">25:00</div>
+          <div class="clock-option-label">Thin</div>
+        </div>
+        <div class="clock-option" data-clock="futuristic" onclick="applyClockStyle('futuristic')">
+          <div class="clock-option-preview" style="font-family:'Orbitron',monospace;font-weight:800;letter-spacing:0.1em">25:00</div>
+          <div class="clock-option-label">Futuristic</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Preferences</div>
+      <div class="toggle-row">
+        <span class="toggle-label">Ticking sound</span>
+        <div class="toggle-switch" id="toggle-tick" onclick="togglePref('tick')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">End alarm</span>
+        <div class="toggle-switch on" id="toggle-alarm" onclick="togglePref('alarm')"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────
+const STATE = {
+  mode:'focus', running:false,
+  elapsed:0, focusDuration:25*60,
+  interval:null, sessionStart:null, currentSession:null,
+  soundTick:false, soundAlarm:true,
+  xp:0, level:1,
+  theme:'purple', font:'modern', clockStyle:'digital',
+  sessions:[],
+};
+
+// ─────────────────────────────────────
+//  ALARM
+// ─────────────────────────────────────
+let alarmInterval = null;
+let alarmCtx = null;
+
+function startAlarm() {
+  if (!STATE.soundAlarm) return;
+  showAlarmBanner();
+  playAlarmLoop();
+}
+
+function stopAlarm() {
+  if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; }
+  if (alarmCtx) { try { alarmCtx.close(); } catch(e){} alarmCtx = null; }
+  hideAlarmBanner();
+}
+
+function showAlarmBanner() {
+  document.getElementById('alarm-banner').classList.add('show');
+}
+function hideAlarmBanner() {
+  document.getElementById('alarm-banner').classList.remove('show');
+  // auto-hide after 10s
+}
+
+function playAlarmLoop() {
+  try {
+    alarmCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let count = 0;
+    function ring() {
+      if (!alarmCtx) return;
+      try {
+        const freq = [660,880,660,880];
+        freq.forEach((f,i) => {
+          const o = alarmCtx.createOscillator();
+          const g = alarmCtx.createGain();
+          o.connect(g); g.connect(alarmCtx.destination);
+          o.type = 'sine';
+          o.frequency.value = f;
+          const t = alarmCtx.currentTime + i * 0.2;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.35, t + 0.05);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          o.start(t); o.stop(t + 0.4);
+        });
+      } catch(e){}
+      count++;
+      if (count < 4) {
+        alarmInterval = setTimeout(ring, 900);
+      } else {
+        // auto-stop after 4 rings
+        setTimeout(() => stopAlarm(), 500);
+      }
+    }
+    ring();
+  } catch(e){}
+}
+
+// ─────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────
+function init() {
+  loadStorage();
+  applyTheme(STATE.theme, true);
+  applyFont(STATE.font, true);
+  applyClockStyle(STATE.clockStyle, true);
+  updateClockDisplay();
+  updateNavXP();
+  bindKeyboard();
+  updateToggleUI();
+  updateSoundBtn();
+}
+
+function loadStorage() {
+  const s = localStorage.getItem('focus_state_v2');
+  if (s) {
+    const d = JSON.parse(s);
+    STATE.xp = d.xp||0; STATE.level = d.level||1;
+    STATE.theme = d.theme||'purple'; STATE.font = d.font||'modern';
+    STATE.clockStyle = d.clockStyle||'digital';
+    STATE.soundTick = d.soundTick||false;
+    STATE.soundAlarm = d.soundAlarm!==false;
+    STATE.focusDuration = d.focusDuration||25*60;
+  }
+  const sess = localStorage.getItem('focus_sessions');
+  if (sess) STATE.sessions = JSON.parse(sess);
+}
+
+function saveStorage() {
+  localStorage.setItem('focus_state_v2', JSON.stringify({
+    xp:STATE.xp, level:STATE.level,
+    theme:STATE.theme, font:STATE.font, clockStyle:STATE.clockStyle,
+    soundTick:STATE.soundTick, soundAlarm:STATE.soundAlarm,
+    focusDuration:STATE.focusDuration,
+  }));
+  localStorage.setItem('focus_sessions', JSON.stringify(STATE.sessions));
+}
+
+// ─────────────────────────────────────
+//  PAGE NAV
+// ─────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if (page === 'timer') {
+    document.getElementById('page-timer').classList.add('active');
+    document.getElementById('nav-timer').classList.add('active');
+  } else {
+    document.getElementById('page-dashboard').classList.add('active');
+    document.getElementById('nav-dash').classList.add('active');
+    renderDashboard();
+  }
+}
+
+// ─────────────────────────────────────
+//  MODE
+// ─────────────────────────────────────
+function setMode(mode) {
+  if (STATE.running) stopSession();
+  STATE.mode = mode; STATE.elapsed = 0;
+  // sync old pills (compat)
+  document.querySelectorAll('.mode-pill').forEach(p=>p.classList.remove('active'));
+  // sync new sidebar mode-btns
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  const ids = {focus:'pill-focus',stopwatch:'pill-stopwatch',break:'pill-break'};
+  const el = document.getElementById(ids[mode]);
+  if(el) el.classList.add('active');
+  // progress ring reset
+  const pr = document.getElementById('progress-ring');
+  if(pr) pr.style.strokeDashoffset = '1284';
+  // mode title
+  const titles = {focus:'FOCUS TIMER', stopwatch:'STOPWATCH', break:'BREAK TIME'};
+  const mt = document.getElementById('timer-mode-title');
+  if(mt) mt.textContent = titles[mode]||'';
+  if (mode === 'focus') {
+    STATE.elapsed = STATE.focusDuration;
+    document.getElementById('timer-status').textContent = 'Set a focus duration and start';
+    document.getElementById('timer-status').className = 'timer-status';
+  } else if (mode === 'stopwatch') {
+    document.getElementById('timer-status').textContent = 'Counting up — flow state awaits';
+    document.getElementById('timer-status').className = 'timer-status';
+  } else {
+    document.getElementById('timer-status').textContent = 'Break time — recharge 🍵';
+    document.getElementById('timer-status').className = 'timer-status';
+  }
+  updateClockDisplay();
+  updatePlayBtn();
+}
+
+function setQuick(mins) {
+  if (STATE.running) return;
+  if (STATE.mode !== 'focus') setMode('focus');
+  STATE.focusDuration = mins*60;
+  STATE.elapsed = STATE.focusDuration;
+  updateClockDisplay();
+  document.getElementById('timer-status').textContent = `${mins} min session ready`;
+}
+
+// ─────────────────────────────────────
+//  TIMER ENGINE
+// ─────────────────────────────────────
+function toggleTimer() {
+  if (STATE.running) pauseTimer(); else startTimer();
+}
+function startTimer() {
+  STATE.running = true;
+  STATE.sessionStart = STATE.sessionStart || Date.now();
+  STATE.currentSession = document.getElementById('session-input').value.trim() || 'Focus Session';
+  const label = document.getElementById('session-label-display');
+  label.textContent = `✦ ${STATE.currentSession}`;
+  document.getElementById('timer-status').textContent = STATE.mode==='break' ? 'Taking a break...' : 'Deep focus...';
+  document.getElementById('timer-status').className = 'timer-status active';
+  document.getElementById('clock-display').classList.add('ticking');
+  updatePlayBtn();
+  if (STATE.mode==='focus' && !STATE.interval) STATE.elapsed = STATE.focusDuration;
+  STATE.interval = setInterval(tick, 1000);
+}
+function pauseTimer() {
+  STATE.running = false;
+  clearInterval(STATE.interval); STATE.interval = null;
+  document.getElementById('timer-status').textContent = 'Paused';
+  document.getElementById('timer-status').className = 'timer-status';
+  document.getElementById('clock-display').classList.remove('ticking');
+  updatePlayBtn();
+}
+function resetTimer() {
+  if (STATE.running) pauseTimer();
+  STATE.elapsed = STATE.mode==='focus' ? STATE.focusDuration : 0;
+  STATE.sessionStart = null; STATE.interval = null;
+  document.getElementById('clock-display').classList.remove('ticking');
+  document.getElementById('timer-status').textContent = STATE.mode==='focus' ? 'Set a focus duration and start' : 'Ready';
+  document.getElementById('timer-status').className = 'timer-status';
+  document.getElementById('session-label-display').textContent = 'What will you focus on?';
+  document.getElementById('progress-ring').style.strokeDashoffset = '1284';
+  updateClockDisplay(); updatePlayBtn();
+}
+function stopSession() {
+  if (!STATE.sessionStart) return;
+  const duration = Math.floor((Date.now()-STATE.sessionStart)/1000);
+  if (duration < 5) { resetTimer(); return; }
+  const session = {
+    type: STATE.mode==='break' ? 'break' : 'focus',
+    name: STATE.currentSession || 'Session',
+    duration, date: Date.now(),
+  };
+  STATE.sessions.unshift(session);
+  if (session.type === 'focus') {
+    const mins = Math.floor(duration/60);
+    const oldLevel = STATE.level;
+    STATE.xp += mins;
+    STATE.level = Math.floor(STATE.xp/60)+1;
+    if (STATE.level > oldLevel) {
+      celebrate('🎉 Level Up! You\'re Level '+STATE.level);
+    } else if (mins > 0) {
+      const msgs = ['Keep going! 🔥','New Record!','You\'re on fire 🔥','Incredible focus!'];
+      showPopup(msgs[Math.floor(Math.random()*msgs.length)]);
+    }
+  }
+  saveStorage(); updateNavXP(); resetTimer();
+}
+
+function tick() {
+  if (STATE.mode==='focus') {
+    STATE.elapsed--;
+    if (STATE.elapsed <= 0) {
+      STATE.elapsed = 0; updateClockDisplay(); updateRing();
+      pauseTimer(); startAlarm(); stopSession();
+      celebrate('🏆 Session Complete!'); return;
+    }
+    updateRing();
+  } else {
+    STATE.elapsed++;
+  }
+  if (STATE.soundTick) playTick();
+  updateClockDisplay();
+}
+
+function updateClockDisplay() {
+  document.getElementById('clock-display').textContent =
+    formatTime(STATE.mode==='focus' ? (STATE.elapsed||STATE.focusDuration) : STATE.elapsed);
+}
+
+function updateRing() {
+  const pct = 1-(STATE.elapsed/STATE.focusDuration);
+  const circumference = 1284;
+  document.getElementById('progress-ring').style.strokeDashoffset = circumference-(pct*circumference);
+}
+
+function formatTime(secs) {
+  const h = Math.floor(secs/3600);
+  const m = Math.floor((secs%3600)/60);
+  const s = secs%60;
+  if (h>0) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+  return `${pad(m)}:${pad(s)}`;
+}
+function pad(n){return String(n).padStart(2,'0');}
+
+function updatePlayBtn() {
+  const btn = document.getElementById('btn-playpause');
+  const play = document.getElementById('icon-play');
+  const pause = document.getElementById('icon-pause');
+  const label = document.getElementById('play-label');
+  if (STATE.running) {
+    btn.classList.add('running');
+    play.style.display = 'none';
+    pause.style.display = 'block';
+    if(label) label.textContent = 'Pause';
+  } else {
+    btn.classList.remove('running');
+    play.style.display = 'block';
+    pause.style.display = 'none';
+    if(label) label.textContent = 'Start';
+  }
+}
+
+// ─────────────────────────────────────
+//  SOUND
+// ─────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudio(){if(!audioCtx)audioCtx=new AudioCtx();return audioCtx;}
+function playTick(){
+  try{
+    const ac=getAudio();const o=ac.createOscillator();const g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.frequency.setValueAtTime(800,ac.currentTime);
+    g.gain.setValueAtTime(0.03,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.05);
+    o.start();o.stop(ac.currentTime+0.05);
+  }catch(e){}
+}
+function toggleSound(){STATE.soundAlarm=!STATE.soundAlarm;updateSoundBtn();saveStorage();}
+function updateSoundBtn(){document.getElementById('sound-btn').textContent=STATE.soundAlarm?'🔊':'🔇';}
+
+// ─────────────────────────────────────
+//  XP
+// ─────────────────────────────────────
+function updateNavXP(){
+  const pct=(STATE.xp%60)/60*100;
+  document.getElementById('nav-level').textContent=`Lv ${STATE.level}`;
+  document.getElementById('nav-xp-fill').style.width=pct+'%';
+}
+
+// ─────────────────────────────────────
+//  CELEBRATE
+// ─────────────────────────────────────
+function celebrate(msg){showPopup(msg);launchConfetti();}
+function showPopup(msg){
+  const el=document.getElementById('celebration-popup');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3200);
+}
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const particles=[];
+  const colors=['#c084fc','#f0abfc','#818cf8','#38bdf8','#fbbf24','#34d399'];
+  for(let i=0;i<120;i++){
+    particles.push({
+      x:Math.random()*canvas.width,y:-10,r:Math.random()*6+3,
+      d:Math.random()*4+1,color:colors[Math.floor(Math.random()*colors.length)],
+      tilt:Math.random()*10-5,tiltAngle:0,tiltAngleIncrement:(Math.random()*0.07)+0.05,opacity:1,
+    });
+  }
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);frame++;
+    particles.forEach((p,i)=>{
+      p.tiltAngle+=p.tiltAngleIncrement;
+      p.y+=p.d+Math.sin(frame*0.05+i)*0.5;
+      p.tilt=Math.sin(p.tiltAngle)*12;
+      p.opacity=Math.max(0,1-(p.y/canvas.height));
+      ctx.beginPath();ctx.lineWidth=p.r;
+      ctx.strokeStyle=p.color+Math.floor(p.opacity*255).toString(16).padStart(2,'0');
+      ctx.moveTo(p.x+p.tilt+p.r/2,p.y);
+      ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/2);ctx.stroke();
+    });
+    if(particles.some(p=>p.y<canvas.height)) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+
+// ─────────────────────────────────────
+//  DASHBOARD — COMMAND CENTER
+// ─────────────────────────────────────
+function renderDashboard(){
+  const today=new Date().toDateString();
+  const focusSessions=STATE.sessions.filter(s=>s.type==='focus');
+  const breakSessions=STATE.sessions.filter(s=>s.type==='break');
+  const totalFocus=focusSessions.reduce((a,s)=>a+s.duration,0);
+  const totalBreak=breakSessions.reduce((a,s)=>a+s.duration,0);
+  const todayFocus=focusSessions.filter(s=>new Date(s.date).toDateString()===today).reduce((a,s)=>a+s.duration,0);
+  const best=focusSessions.reduce((a,s)=>s.duration>a?{dur:s.duration,date:s.date}:a,{dur:0,date:null});
+  const streak=calcStreak();
+
+  // HERO
+  document.getElementById('dash-today-val').textContent=fmtMins(todayFocus)||'0m';
+  const dailyGoalSecs=4*3600; // 4h goal
+  const remaining=Math.max(0,dailyGoalSecs-todayFocus);
+  document.getElementById('dash-goal-left').textContent=
+    todayFocus>=dailyGoalSecs ? '✓ Daily goal reached!' : fmtMins(remaining)+' to daily goal';
+  document.getElementById('dash-sessions-val').textContent=focusSessions.length;
+  document.getElementById('dash-total-val').textContent=fmtMins(totalFocus)||'0m';
+
+  // XP
+  const xpInLevel=STATE.xp%60;
+  const pct=(xpInLevel/60)*100;
+  document.getElementById('dash-level-badge').textContent='Level '+STATE.level;
+  document.getElementById('dash-level-num').textContent=STATE.level;
+  document.getElementById('dash-xp-bar').style.width=pct+'%';
+  document.getElementById('dash-xp-cur').textContent=(STATE.xp%60)+' XP';
+  document.getElementById('dash-xp-next').textContent='60 XP';
+
+  // BEST
+  if(best.dur>0){
+    document.getElementById('dash-best-val').textContent=fmtMins(best.dur);
+    document.getElementById('dash-best-date').textContent=
+      new Date(best.date).toLocaleDateString('en',{month:'short',day:'numeric'});
+  }else{
+    document.getElementById('dash-best-val').textContent='—';
+    document.getElementById('dash-best-date').textContent='No sessions yet';
+  }
+
+  // STREAK
+  document.getElementById('dash-streak-num').textContent=streak;
+  document.getElementById('dash-streak-sub').textContent=
+    streak===0?'Start your streak today':streak===1?'day — keep it up!':'days in a row 🔥';
+
+  // RATIO
+  const total=totalFocus+totalBreak;
+  const fp=total>0?Math.round(totalFocus/total*100):0;
+  const bp=total>0?Math.round(totalBreak/total*100):0;
+  document.getElementById('ratio-focus-bar').style.width=Math.max(fp,2)+'%';
+  document.getElementById('ratio-break-bar').style.width=Math.max(bp,2)+'%';
+  document.getElementById('ratio-focus-lbl').textContent='Focus '+fp+'%';
+  document.getElementById('ratio-break-lbl').textContent='Break '+bp+'%';
+  document.getElementById('ratio-insight').textContent=
+    total===0?'No data yet':bp>40?bp+'% time on breaks — try more focus':fp>=80?'🔥 Excellent focus discipline!':'Good balance';
+
+  // HEATMAP
+  renderHeatmap();
+
+  // IMPROVEMENT
+  renderImprovement(focusSessions);
+}
+
+function renderHeatmap(){
+  const dayNames=['S','M','T','W','T','F','S'];
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const dayStr=d.toDateString();
+    const mins=Math.floor(STATE.sessions.filter(s=>s.type==='focus'&&new Date(s.date).toDateString()===dayStr).reduce((a,s)=>a+s.duration,0)/60);
+    days.push({mins,label:dayNames[d.getDay()]});
+  }
+  const maxMins=Math.max(...days.map(d=>d.mins),1);
+  const cells=document.getElementById('heatmap-cells');
+  const lbls=document.getElementById('heatmap-labels');
+  cells.innerHTML=days.map(d=>{
+    let lvl='';
+    const ratio=d.mins/maxMins;
+    if(d.mins>0){lvl=ratio>0.75?'d4':ratio>0.5?'d3':ratio>0.25?'d2':'d1';}
+    const title=d.mins>0?d.mins+'m':'0m';
+    return`<div class="heatmap-cell ${lvl}" title="${title}"></div>`;
+  }).join('');
+  lbls.innerHTML=days.map(d=>`<div class="heatmap-day-lbl">${d.label}</div>`).join('');
+}
+
+function renderImprovement(focusSessions){
+  const today=new Date();
+  const todayStr=today.toDateString();
+  const yest=new Date();yest.setDate(yest.getDate()-1);const yesterStr=yest.toDateString();
+  const todayMins=Math.floor(focusSessions.filter(s=>new Date(s.date).toDateString()===todayStr).reduce((a,s)=>a+s.duration,0)/60);
+  const yesterMins=Math.floor(focusSessions.filter(s=>new Date(s.date).toDateString()===yesterStr).reduce((a,s)=>a+s.duration,0)/60);
+  const delta=todayMins-yesterMins;
+  const el=document.getElementById('improve-delta');
+  const desc=document.getElementById('improve-desc');
+  const bars=document.getElementById('improve-bars');
+  if(yesterMins===0&&todayMins===0){
+    el.textContent='—';el.className='improve-delta neutral';
+    desc.textContent='No data yet';bars.innerHTML='';return;
+  }
+  if(delta>0){el.textContent='+'+delta+'m';el.className='improve-delta pos';}
+  else if(delta<0){el.textContent=delta+'m';el.className='improve-delta neg';}
+  else{el.textContent='Same';el.className='improve-delta neutral';}
+  desc.textContent=delta>0?'better than yesterday ✅':delta<0?'less than yesterday ⚠️':'Same as yesterday';
+  const maxM=Math.max(todayMins,yesterMins,1);
+  bars.innerHTML=`
+    <div class="improve-day">
+      <div class="improve-day-bar" style="width:${Math.max(todayMins/maxM*80,4)}px;background:var(--accent);box-shadow:0 0 8px rgba(192,132,252,0.4)"></div>
+      <div class="improve-day-lbl">Today</div>
+    </div>
+    <div class="improve-day">
+      <div class="improve-day-bar" style="width:${Math.max(yesterMins/maxM*80,4)}px;background:rgba(255,255,255,0.2)"></div>
+      <div class="improve-day-lbl">Yest.</div>
+    </div>`;
+}
+
+function fmtMins(secs){
+  const h=Math.floor(secs/3600);const m=Math.floor((secs%3600)/60);
+  if(h>0)return`${h}h ${m}m`;return`${m}m`;
+}
+function calcStreak(){
+  const focusDays=new Set(STATE.sessions.filter(s=>s.type==='focus').map(s=>new Date(s.date).toDateString()));
+  let streak=0;const d=new Date();
+  while(focusDays.has(d.toDateString())){streak++;d.setDate(d.getDate()-1);}
+  return streak;
+}
+function clearHistory(){
+  if(confirm('Clear all session history?')){STATE.sessions=[];saveStorage();renderDashboard();}
+}
+
+// ─────────────────────────────────────
+//  THEME / FONT / CLOCK
+// ─────────────────────────────────────
+function applyTheme(theme, silent){
+  ['purple','blue','dark','sunset','ocean','lawn'].forEach(t=>document.body.classList.remove('theme-'+t));
+  document.body.classList.add('theme-'+theme);
+  STATE.theme=theme;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('selected',s.dataset.theme===theme));
+  if(!silent)saveStorage();
+}
+
+function applyFont(font, silent){
+  ['modern','clean','elegant'].forEach(f=>document.body.classList.remove('font-'+f));
+  document.body.classList.add('font-'+font);
+  STATE.font=font;
+  document.querySelectorAll('.font-option').forEach(f=>f.classList.toggle('selected',f.dataset.font===font));
+  if(!silent)saveStorage();
+}
+
+function applyClockStyle(style, silent){
+  ['digital','mono','rounded','thin','futuristic'].forEach(s=>document.body.classList.remove('clock-'+s));
+  document.body.classList.add('clock-'+style);
+  STATE.clockStyle=style;
+  document.querySelectorAll('.clock-option').forEach(o=>o.classList.toggle('selected',o.dataset.clock===style));
+  // update the actual clock font var
+  const clockEl = document.getElementById('clock-display');
+  clockEl.style.transition = 'font-family 0.4s ease, font-weight 0.4s ease';
+  if(!silent)saveStorage();
+}
+
+// ─────────────────────────────────────
+//  PANELS
+// ─────────────────────────────────────
+function openPanel(id){document.getElementById('panel-'+id).classList.add('open');}
+function closePanel(id){document.getElementById('panel-'+id).classList.remove('open');}
+document.getElementById('panel-theme').addEventListener('click',function(e){if(e.target===this)closePanel('theme');});
+
+// ─────────────────────────────────────
+//  PREFS
+// ─────────────────────────────────────
+function togglePref(pref){
+  if(pref==='tick'){STATE.soundTick=!STATE.soundTick;document.getElementById('toggle-tick').classList.toggle('on',STATE.soundTick);}
+  else if(pref==='alarm'){STATE.soundAlarm=!STATE.soundAlarm;document.getElementById('toggle-alarm').classList.toggle('on',STATE.soundAlarm);updateSoundBtn();}
+  saveStorage();
+}
+function updateToggleUI(){
+  document.getElementById('toggle-tick').classList.toggle('on',STATE.soundTick);
+  document.getElementById('toggle-alarm').classList.toggle('on',STATE.soundAlarm);
+}
+
+// ─────────────────────────────────────
+//  KEYBOARD
+// ─────────────────────────────────────
+function bindKeyboard(){
+  document.addEventListener('keydown',e=>{
+    if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;
+    if(e.code==='Space'){e.preventDefault();toggleTimer();}
+    if(e.key==='r'||e.key==='R') resetTimer();
+  });
+}
+
+// ─────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────
+init();
+</script>
+</body>
+</html>
